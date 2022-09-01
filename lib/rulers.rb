@@ -11,7 +11,15 @@ module Rulers
 
       klass, action = get_controller_and_action(env)
       controller = klass.new(env)
-      text = controller.send(action)
+      text = begin
+        controller.send(action)
+      rescue StandardError
+        return [
+          500,
+          { 'Content-Type' => 'text/html' },
+          [ErrorController.new(env).error]
+        ]
+      end
       [
         200,
         { 'Content-Type' => 'text/html' },
@@ -27,6 +35,12 @@ module Rulers
 
     def env
       @env
+    end
+  end
+
+  class ErrorController < Controller
+    def error
+      "Oops, something went horribly wrong."
     end
   end
 end
