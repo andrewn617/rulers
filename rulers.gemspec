@@ -26,5 +26,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_runtime_dependency "rack", "~>2.2"
+  spec.add_runtime_dependency "erubis"
   spec.add_development_dependency "rack-test"
 end
