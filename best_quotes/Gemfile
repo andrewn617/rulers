@@ -1,3 +1,7 @@
 source 'https://rubygems.org'
 gem "rulers", path: ".."
 gem "puma"
+
+group :development do
+  gem "rerun"
+end
