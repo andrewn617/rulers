@@ -4,62 +4,79 @@ module Rulers
     class FileModel
       def self.find(id)
         begin
-          FileModel.new("db/quotes/#{id}.json") rescue return nil
+          FileModel.new_from_file("db/quotes/#{id}.json") rescue return nil
         end
       end
 
       def self.all
         files = Dir["db/quotes/*.json"]
-        files.map { |f| FileModel.new f }
+        files.map { |f| FileModel.new_from_file f }
       end
 
       def self.create(attrs)
-        hash = Hash.new("")
-        hash["submitter"] = attrs["submitter"]
-        hash["quote"] = attrs["quote"]
-        hash["attribution"] = attrs["attribution"]
+        new_record = new(data: attrs)
 
-        files = Dir["db/quotes/*.json"]
-        names = files.map { |f| File.split(f)[-1] }
-        highest = names.map(&:to_i).max
-        id = highest + 1
-        File.open("db/quotes/#{id}.json", "w") do |f|
-          f.write <<~TEMPLATE
-            {"submitter": "#{hash["submitter"]}",  "quote": "#{hash["quote"]}",  "attribution": "#{hash["attribution"]}"}
-          TEMPLATE
-        end
-        FileModel.new "db/quotes/#{id}.json"
+        new_record.save
       end
 
-      def initialize(filename)
-        @filename = filename # If filename is "dir/37.json", @id is 37
+      def self.new_from_file(filename)
+        filename = filename # If filename is "dir/37.json", @id is 37
         basename = File.split(filename)[-1]
-        @id = File.basename(basename, ".json").to_i
+        id = File.basename(basename, ".json").to_i
         obj = File.read(filename)
-        @hash = MultiJson.load(obj)
+        hash = MultiJson.load(obj)
+        new(id: id, data: hash)
+      end
+
+      def initialize(data:, id: nil)
+        @data = data
+        @id = id
       end
 
       def [](name)
-        @hash[name.to_s]
+        @data[name.to_s]
       end
 
       def []=(name, value)
-        @hash[name.to_s] = value
+        @data[name.to_s] = value
       end
 
       def update(attrs)
         attrs.transform_keys!(&:to_s)
-        @hash["submitter"] = attrs["submitter"] if attrs["submitter"]
-        @hash["quote"] = attrs["quote"] if attrs["quote"]
-        @hash["attribution"] = attrs["attribution"] if attrs["attribution"]
+        @data["submitter"] = attrs["submitter"] if attrs["submitter"]
+        @data["quote"] = attrs["quote"] if attrs["quote"]
+        @data["attribution"] = attrs["attribution"] if attrs["attribution"]
+
+        save
+      end
+
+      def save
+        set_id if new_record?
 
         File.open("db/quotes/#{@id}.json", "w") do |f|
           f.write <<~TEMPLATE
-            {"submitter": "#{@hash["submitter"]}",  "quote": "#{@hash["quote"]}",  "attribution": "#{@hash["attribution"]}"}
+            {"submitter": "#{@data["submitter"]}",  "quote": "#{@data["quote"]}",  "attribution": "#{@data["attribution"]}"}
           TEMPLATE
         end
 
         self
+      end
+
+      private
+
+      def set_id
+        files = Dir["db/quotes/*.json"]
+        names = files.map { |f| File.split(f)[-1] }
+        highest = names.map(&:to_i).max
+        @id = highest + 1
+      end
+
+      def new_record?
+        @id
+      end
+
+      def file_name
+        "db/quotes/#{@id}.json"
       end
     end
   end
