@@ -1,5 +1,9 @@
+require "rulers/file_model"
+
 module Rulers
   class Controller
+    include Model
+
     def initialize(env)
       @env = env
     end
