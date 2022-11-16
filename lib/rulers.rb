@@ -19,7 +19,10 @@ module Rulers
       controller = klass.new(env)
       text = begin
         controller.send(action)
-      rescue StandardError
+      rescue StandardError => e
+        File.open("debug.text", "w") do |f|
+          f.write(e.message)
+        end
         return [
           500,
           { 'Content-Type' => 'text/html' },

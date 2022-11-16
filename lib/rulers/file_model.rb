@@ -46,6 +46,21 @@ module Rulers
       def []=(name, value)
         @hash[name.to_s] = value
       end
+
+      def update(attrs)
+        attrs.transform_keys!(&:to_s)
+        @hash["submitter"] = attrs["submitter"] if attrs["submitter"]
+        @hash["quote"] = attrs["quote"] if attrs["quote"]
+        @hash["attribution"] = attrs["attribution"] if attrs["attribution"]
+
+        File.open("db/quotes/#{@id}.json", "w") do |f|
+          f.write <<~TEMPLATE
+            {"submitter": "#{@hash["submitter"]}",  "quote": "#{@hash["quote"]}",  "attribution": "#{@hash["attribution"]}"}
+          TEMPLATE
+        end
+
+        self
+      end
     end
   end
 end
